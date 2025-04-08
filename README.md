@@ -61,3 +61,25 @@ export default _default;
 前往 GitHub > Settings > Developer settings > Personal access tokens
 
 生成新令牌，勾选 write:packages 和 read:packages 权限
+
+
+
+### 安装注意
+包其实发布在 GitHub Packages ，因此直接使用npm 安装默认 registry 是 npmjs.org
+
+1. 一次安装
+``` bash
+pnpm add @gray-ray/gr-func --registry=https://npm.pkg.github.com
+
+```
+2. 项目中配置 .npmrc
+``` ini
+@your-username:registry=https://npm.pkg.github.com/
+//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
+
+```
+执行
+``` bash 
+pnpm add @gray-ray/gr-func
+```
+   

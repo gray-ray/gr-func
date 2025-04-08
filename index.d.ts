@@ -23,16 +23,10 @@ export declare function getValueType(a: any): string;
 export declare function findNode(data: object | Array<any>, childKey: string | undefined, predicate: (e: any) => boolean): any;
 /**
  * @description 校验url query 格式是否正确
- * @param { string} query
+ * @param { string} url
  * @returns { boolean}
  */
-export declare function validateUrlQuery(query: string): boolean;
-/**
- * @description 判断url 格式是否正确 校验 query 是否正确
- * @param {string} url
- * @returns { boolean}
- */
-export declare function validateUrl(url: string): void;
+export declare function validateUrlQuery(url: string): boolean;
 declare const _default: {
     getPadStr: typeof getPadStr;
     getValueType: typeof getValueType;
