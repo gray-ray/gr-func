@@ -1,0 +1,32 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - 'v*'  # 只有 tag 推送时触发，如 v1.0.1
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://npm.pkg.github.com/
+          scope: '@gray-ray'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build package
+        run: npm run build
+
+      - name: Publish to GitHub Package Registry
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

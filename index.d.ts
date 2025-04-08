@@ -1,9 +1,3 @@
-
-
-### 常用函数方法集合
-
-
-``` typescript
 /**
  * @description 字符串 填充
  * @param {string} str
@@ -46,18 +40,3 @@ declare const _default: {
     validateUrlQuery: typeof validateUrlQuery;
 };
 export default _default;
-
-```
-
-### 发布注意
-根目录下创建 `.npmrc`
-``` ini
-@your-username:registry=https://npm.pkg.github.com/
-//npm.pkg.github.com/:_authToken=${NPM_TOKEN}
-
-```
-
-创建 GitHub 个人访问令牌
-前往 GitHub > Settings > Developer settings > Personal access tokens
-
-生成新令牌，勾选 write:packages 和 read:packages 权限

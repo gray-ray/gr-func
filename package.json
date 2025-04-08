@@ -1,0 +1,30 @@
+{
+  "name": "gr-func",
+  "version": "1.0.4",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "rm -rf dist index.d.ts &&  tsc",
+    "test": "jest"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "url":"git://github.com/gray-ray/gr-func.git"
+  },
+  "keywords": [],
+  "author": "gray-ray",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.27.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.16",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.1",
+    "typescript": "^5.8.2"
+  }
+}
