@@ -1,6 +1,6 @@
 {
   "name": "gr-func",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,7 +13,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "repository": {
-    "url":"git://github.com/gray-ray/gr-func.git"
+    "url": "git://github.com/gray-ray/gr-func.git"
   },
   "keywords": [],
   "author": "gray-ray",
