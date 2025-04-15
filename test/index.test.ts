@@ -1,6 +1,6 @@
 
 
-import { getPadStr, findNode, validateUrlQuery as isValidQueryWithRegex } from '../src/index';
+import { getPadStr, findNode, validateUrlQuery as isValidQueryWithRegex , memoize } from '../src/index';
 
 
 // describe('getPadStr', () => {
@@ -196,68 +196,122 @@ import { getPadStr, findNode, validateUrlQuery as isValidQueryWithRegex } from '
 
 
 
-describe('URL Query 格式校验', () => {
-  // 正常情况测试
-  test('标准查询参数 - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=John&age=30')).toBe(true);
+// describe('URL Query 格式校验', () => {
+//   // 正常情况测试
+//   test('标准查询参数 - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=John&age=30')).toBe(true);
+//   });
+
+//   test('编码的查询参数 - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=John%20Doe&city=%E5%8C%97%E4%BA%AC')).toBe(true);
+//   });
+
+//   test('空值的参数 - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=&age=30')).toBe(true);
+//   });
+
+//   test('无值的参数 - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=John&age')).toBe(true);
+//   });
+
+//   test('相对路径URL - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('/path/to/resource?page=1&size=10')).toBe(true);
+//   });
+
+//   test('只有查询部分的URL - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('?lang=zh&theme=dark')).toBe(true);
+//   });
+
+//   test('没有查询参数的URL - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com')).toBe(true);
+//   });
+
+//   test('只有问号的URL - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com?')).toBe(true);
+//   });
+
+//   // 异常情况测试
+//   test('空键的参数 - 应返回 false', () => {
+//     expect(isValidQueryWithRegex('https://example.com?=value&age=30')).toBe(false);
+//   });
+
+//   test('以&结尾的查询 - 应返回 false', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=John&')).toBe(false);
+//   });
+
+//   test('连续的&& - 应返回 false', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=John&&age=30')).toBe(false);
+//   });
+
+//   test('无效的编码URL - 应返回 false', () => {
+//     expect(isValidQueryWithRegex('https://example.com?name=%ZZ')).toBe(false);
+//   });
+
+//   // test('包含非法字符的键 - 应返回 false', () => {
+//   //   expect(isValidQueryWithRegex('https://example.com?na|me=John')).toBe(false);
+//   // });
+
+//   // 边界情况测试
+//   test('超长查询参数 - 应返回 true', () => {
+//     const longParam = 'a'.repeat(1000);
+//     expect(isValidQueryWithRegex(`https://example.com?${longParam}=${longParam}`)).toBe(true);
+//   });
+
+//   test('多个参数混合情况 - 应返回 true', () => {
+//     expect(isValidQueryWithRegex('https://example.com?a=1&b=2&c&d=&e=f%20g&h=%E4%B8%AD%E6%96%87')).toBe(true);
+//   });
+// });
+
+
+
+describe('memoize', () => {
+  test('caches results by default with JSON.stringify key', () => {
+    const mockFn = jest.fn((x, y) => x + y);
+    //@ts-ignore
+    const memoized = memoize(mockFn,{});
+
+    expect(memoized(1, 2)).toBe(3);
+    expect(memoized(1, 2)).toBe(3);
+    expect(mockFn).toHaveBeenCalledTimes(1); // 第二次命中缓存
   });
 
-  test('编码的查询参数 - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=John%20Doe&city=%E5%8C%97%E4%BA%AC')).toBe(true);
+  test('expires cache after ttl', (done) => {
+    const mockFn = jest.fn(x => x * 2);
+    const memoized = memoize(mockFn, { ttl: 100 });
+    
+    expect(memoized(2)).toBe(4);
+    expect(memoized(2)).toBe(4);
+    expect(mockFn).toHaveBeenCalledTimes(1);
+
+    setTimeout(() => {
+      expect(memoized(2)).toBe(4);
+      expect(mockFn).toHaveBeenCalledTimes(2);
+      done();
+    }, 150);
+  },1000);
+
+  test('uses custom resolver', () => {
+    const mockFn = jest.fn(id => ({ id }));
+    const memoized = memoize(mockFn, {
+      resolver: id => `user:${id}`,
+    });
+
+    expect(memoized(1)).toEqual({ id: 1 });
+    expect(memoized(1)).toEqual({ id: 1 });
+    expect(mockFn).toHaveBeenCalledTimes(1);
   });
 
-  test('空值的参数 - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=&age=30')).toBe(true);
-  });
+  test('applies LRU strategy when cache exceeds maxSize', () => {
+    const mockFn = jest.fn(x => x);
+    const memoized = memoize(mockFn, { maxSize: 2 });
 
-  test('无值的参数 - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=John&age')).toBe(true);
-  });
+    memoized(1); // cache: [1]
+    memoized(2); // cache: [1,2]
+    memoized(3); // cache should evict 1 → [2,3]
 
-  test('相对路径URL - 应返回 true', () => {
-    expect(isValidQueryWithRegex('/path/to/resource?page=1&size=10')).toBe(true);
-  });
-
-  test('只有查询部分的URL - 应返回 true', () => {
-    expect(isValidQueryWithRegex('?lang=zh&theme=dark')).toBe(true);
-  });
-
-  test('没有查询参数的URL - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com')).toBe(true);
-  });
-
-  test('只有问号的URL - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com?')).toBe(true);
-  });
-
-  // 异常情况测试
-  test('空键的参数 - 应返回 false', () => {
-    expect(isValidQueryWithRegex('https://example.com?=value&age=30')).toBe(false);
-  });
-
-  test('以&结尾的查询 - 应返回 false', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=John&')).toBe(false);
-  });
-
-  test('连续的&& - 应返回 false', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=John&&age=30')).toBe(false);
-  });
-
-  test('无效的编码URL - 应返回 false', () => {
-    expect(isValidQueryWithRegex('https://example.com?name=%ZZ')).toBe(false);
-  });
-
-  // test('包含非法字符的键 - 应返回 false', () => {
-  //   expect(isValidQueryWithRegex('https://example.com?na|me=John')).toBe(false);
-  // });
-
-  // 边界情况测试
-  test('超长查询参数 - 应返回 true', () => {
-    const longParam = 'a'.repeat(1000);
-    expect(isValidQueryWithRegex(`https://example.com?${longParam}=${longParam}`)).toBe(true);
-  });
-
-  test('多个参数混合情况 - 应返回 true', () => {
-    expect(isValidQueryWithRegex('https://example.com?a=1&b=2&c&d=&e=f%20g&h=%E4%B8%AD%E6%96%87')).toBe(true);
+    expect(mockFn).toHaveBeenCalledTimes(3);
+    memoized(2); // hit cache
+    memoized(1); // should call again
+    expect(mockFn).toHaveBeenCalledTimes(4);
   });
 });

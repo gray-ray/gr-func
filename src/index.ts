@@ -43,7 +43,7 @@ export function getValueType (a: any): string{
  * @param { Function } predicate
  * @returns {any} 
  */
-export function findNode(data: object | Array<any>, childKey: string = 'children', predicate: (e: any) => boolean): any {
+export function findNode(data: object | Array<any>, predicate: (e: any) => boolean, childKey: string = 'children' ): any {
   if (!['Object', 'Array']?.includes(getValueType(data))) {
     throw new Error('data 必须为对象或者数组');
   }
@@ -115,9 +115,58 @@ export function validateUrlQuery(url: string): boolean {
 }
 
 
+/**
+ * @description 函数缓存 
+ * @callback cb
+ * @param { cb } fn  函数
+ * @param { Object } 
+ * @description  功能 自定义校验key、 过期时间、 自动缓存清理、LRU缓存淘汰策略
+ */
+export function memoize<T extends (...args: any[]) => any>(fn: (v:any) => any, {ttl = 0, maxSize=100, resolver} : MemoizeOptions<T>) {
+  const cache = new Map<string, {value: ReturnType<T>; expireAt: number}>();
 
+  return function(...args: Parameters<T>): ReturnType<T>{
 
+    const key = resolver ? resolver(...args): JSON.stringify(args);
 
+    const now = Date.now();
+
+    if(cache.has(key)){
+      const entry = cache.get(key)!;
+
+      if(ttl == 0 || now - entry.expireAt < ttl) {
+        // LRU: 重新移动到末尾（最近最少使用）
+        cache.delete(key);
+
+        cache.set(key, entry);
+
+        return entry?.value
+      } else {
+        // expired
+        cache.delete(key);
+      }
+
+    }
+
+    // LRU 淘汰
+    // @ts-ignore
+    const result = fn.apply(this, args);
+
+    const expireAt = ttl > 0 ? now + ttl : Infinity;
+
+    if(cache.size>=maxSize){
+
+      const firstKey = cache.keys().next().value!;
+
+      cache.delete(firstKey)
+    }
+
+    cache.set(key, {value: result, expireAt});
+
+    return result;
+  } as T
+
+}
 
 
 export default {
